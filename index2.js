@@ -108,7 +108,7 @@ http.createServer(async (request, response) => {
                 if (usersRes.length === 0) return sendError(response, 404);
 
                 const users = usersRes.map(u => u.login);
-                const admin = usersRes.find(u => u.iduser === room.admin)?.login || "";
+                const admin = usersRes.find(u => u.iduser === room.admin);
 
                 response.setHeader("map-img", room.mapimg);
                 response.setHeader("map-tag", encodeURI(room.maptag));

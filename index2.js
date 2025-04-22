@@ -113,7 +113,7 @@ http.createServer(async (request, response) => {
                 response.setHeader("map-img", room.mapimg);
                 response.setHeader("map-tag", encodeURI(room.maptag));
                 response.setHeader("users", JSON.stringify(users));
-                response.setHeader("creator", JSON.stringify(admin.login));
+                response.setHeader("creator", admin.login);
                 return response.end();
             }
 

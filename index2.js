@@ -113,7 +113,7 @@ http.createServer(async (request, response) => {
                 response.setHeader("map-img", room.mapimg);
                 response.setHeader("map-tag", encodeURI(room.maptag));
                 response.setHeader("users", JSON.stringify(users));
-                response.setHeader("creator", admin);
+                response.setHeader("creator", JSON.stringify(admin));
                 return response.end();
             }
 
@@ -160,6 +160,42 @@ http.createServer(async (request, response) => {
                     DELETE ul FROM user_list ul 
                     JOIN user u ON ul.user = u.iduser   
                     WHERE u.login = ?`, [kickTarget]);
+
+                return response.end();
+            }
+
+            case "/qr_check": {
+                const { login, pass, roomName, questName } = dataJson;
+                const userId = await authorizeUser(login, pass);
+                if (!userId) return sendError(response, 403);
+
+                const roomResults = await query("SELECT * FROM room WHERE name = ? AND password = ?", [roomName, roomPassword]);
+                if (roomResults.length === 0) return sendError(response, 404);
+
+                await query('Insert into quests(user, room, quest) VALUES (?, ?, ?)', [userId, roomResults[0].idroom, questName]);
+
+                return response.end();
+            }
+
+            case "/check_quests": {
+                const { login, pass, roomName } = dataJson;
+
+                const results = await query(`
+                    SELECT * FROM user 
+                    JOIN user_list ON user.iduser = user_list.user 
+                    WHERE login = ? AND password = ? AND is_admin = 1`, [login, pass]);
+
+                if (results.length === 0) return sendError(response, 403);
+
+                const questResults = await query(`
+                    select * from quests where room =?`, [results[0].room]);
+
+                const users = questResults.map(u => u.user);
+                const quests = questResults.map(u => u.quest);
+
+                response.setHeader("users", JSON.stringify(users));
+                response.setHeader("quests", JSON.stringify(quests));
+
 
                 return response.end();
             }

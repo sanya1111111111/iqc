@@ -144,6 +144,7 @@ http.createServer(async (request, response) => {
                 response.setHeader("latitude", JSON.stringify(latitudes));
                 response.setHeader("longitude", JSON.stringify(longitudes));
                 response.setHeader("quests", JSON.stringify(questsReturn));
+                console.log(quests);
                 return response.end();
             }
 

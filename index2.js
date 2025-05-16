@@ -106,7 +106,6 @@ http.createServer(async (request, response) => {
 
                 const usersRes = await query("SELECT * FROM user JOIN user_list ON user.iduser = user_list.user WHERE room = ?", [room.idroom]);
                 if (usersRes.length === 0) return sendError(response, 404);
-
                 const users = usersRes.map(u => u.login);
                 const admin = usersRes.find(u => u.iduser === room.admin);
 
@@ -118,7 +117,7 @@ http.createServer(async (request, response) => {
             }
 
             case "/request_room_update": {
-                const { login, pass, roomName, latitude, longitude } = dataJson;
+                const { login, pass, roomName, latitude, longitude, quests } = dataJson;
 
                 console.log(`${login} ${roomName}`);
 
@@ -126,23 +125,25 @@ http.createServer(async (request, response) => {
                 if (!userId || !latitude || !longitude) return sendError(response, 403);
 
                 const now = new Date();
-                await query("UPDATE user_list SET latitude = ?, longitude = ?, last_ping = ? WHERE user = ?", [latitude, longitude, now, userId]);
+                await query("UPDATE user_list SET latitude = ?, longitude = ?, last_ping = ?, quests = ? WHERE user = ?", [latitude, longitude, now, quests, userId]);
 
                 const usersLoc = await query(`
                     SELECT * FROM user_list 
                     JOIN room ON user_list.room = room.idroom 
                     JOIN user ON user_list.user = user.iduser 
-                    WHERE room.name = ?`, [roomName]);
+                    WHERE room.name = ?`        , [roomName]);
 
                 if (usersLoc.length === 0) return sendError(response, 500);
 
                 const users = usersLoc.map(u => u.login);
                 const latitudes = usersLoc.map(u => u.latitude);
                 const longitudes = usersLoc.map(u => u.longitude);
+                const questsReturn = usersLoc.map(u => u.quests)
 
                 response.setHeader("users", JSON.stringify(users));
                 response.setHeader("latitude", JSON.stringify(latitudes));
                 response.setHeader("longitude", JSON.stringify(longitudes));
+                response.setHeader("quests", JSON.stringify(questsReturn));
                 return response.end();
             }
 
